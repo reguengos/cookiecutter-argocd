@@ -2,7 +2,7 @@ apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: accommodation-facility-consumer
-  namespace: src-conceptstream
+  namespace: {{cookiecutter.k8s_namespace}}
 spec:
   schedule: 26 * * * *
   jobTemplate:
@@ -17,7 +17,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: app
-              image: eu.gcr.io/trv-hs-src-conceptstream-stage/consumer:latest
+              image: eu.gcr.io/{{cookiecutter.gcp_project}}-stage/consumer:latest
               imagePullPolicy: Always
               env:
 {{ toYaml .Values.containers.env | indent 14 }}

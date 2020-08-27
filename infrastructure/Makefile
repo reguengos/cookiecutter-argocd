@@ -24,7 +24,7 @@ endif
 ##@ Infrastructure
 
 cidocker:: ## build the latest ci image for testing
-	@gcloud builds submit --tag eu.gcr.io/trv-hs-src-conceptstream-stage/ci-image:${VERSION_TAG} ./resources/ci-image/.
+	@gcloud builds submit --tag gcr.io/{{cookiecutter.gcp_project}}-stage/ci-image:${VERSION_TAG} ./resources/ci-image/.
 
 ##@ Argo CD
 
@@ -32,7 +32,7 @@ charts/argo-cd:
 	helm pull argo/argo-cd --untar --untardir ./charts
 
 argo-cd:: charts/argo-cd ## Render argocd chart
-	echo "argo-cd:" && render-chart workloads/argo-cd.yaml
+	echo "argo-cd:" && render-chart argocd/workloads/argo-cd.yaml
 argocd:: argo-cd # alias
 
 charts/argocd-notifications:
@@ -47,10 +47,10 @@ argo-resources:: ## Render argocd resources, such as projects and app
 resources:: argo-resources # alias
 
 services::
-	$(MAKE) service-consumer service-producer service-transformer
+	$(MAKE) {{cookiecutter.name}}
 
 service-%::
-	echo "$*:" && ./resources/make/bin/render-chart "workloads/service-$(dash-1).yaml" "$(ENVIRONMENT)"
+	echo "$*:" && ./resources/make/bin/render-chart "argocd/workloads/service-$(dash-1).yaml" "$(ENVIRONMENT)"
 
 digest:: ## Run kbld to replace image tags with digests
 	kbld-digest ./manifests
@@ -74,7 +74,7 @@ bots:: ## Deploy all bots
 
 ##@ Misc
 
-apply:: ## kubectl apply, e.g. WORKLOAD="workloads/argo-cd.yaml" DEPLOYMENT="edge-eu-w4" KUBECONFIG=path/to/kubeconfig
+apply:: ## kubectl apply, e.g. WORKLOAD="argocd/workloads/argo-cd.yaml" DEPLOYMENT="edge-eu-w4" KUBECONFIG=path/to/kubeconfig
 	deploy-chart $(WORKLOAD) $(DEPLOYMENT) $(KUBECONFIG)
 
 render:: ## render all manifests
@@ -89,23 +89,23 @@ help:: ## Display this help
 TF_VAR_ENV=$(dash-2)
 
 build-%::## build docker image localy and tag with latest. make build-producer or other component from the code folder
-	@docker build -t eu.gcr.io/trv-hs-src-conceptstream-stage/$(dash-1):latest -f ../code/$(dash-1)/Dockerfile ../code/ && docker push eu.gcr.io/trv-hs-src-conceptstream-stage/$(dash-1):latest
+	@docker build -t gcr.io/{{cookiecutter.gcp_project}}-stage/$(dash-1):latest -f ../code/$(dash-1)/Dockerfile ../code/ && docker push gcr.io/{{cookiecutter.gcp_project}}-stage/$(dash-1):latest
 
 gcr-%::## build and push to gcr with short hash from git for tag. make gcr-producer-stage
-	@gcloud builds submit --tag eu.gcr.io/trv-hs-src-conceptstream-$(dash-2)/$(dash-1):latest ../code/$(dash-1)/.
+	@gcloud builds submit --tag gcr.io/{{cookiecutter.gcp_project}}-$(dash-2)/$(dash-1):latest ../code/$(dash-1)/.
 
 images::
-	$(MAKE) gcr-consumer-stage gcr-producer-stage gcr-transformer-stage
+	$(MAKE) gcr-{{cookiecutter.name}}-stage
 
 ##@ Terraform
 
-plan-infra-%::## make plan-infra-data-stage or make plan-infra-conceptstream-stage
-			@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/$(dash-1)/$(dash-2) eu.gcr.io/trv-hs-src-conceptstream-edge/terraform:0.12.26 terraform plan -refresh=true .
+plan-infra-%::## make plan-infra-{{cookiecutter.name}}-data-stage or make plan-infra-{{cookiecutter.name}}-stage
+			@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/$(dash-1)/$(dash-2) gcr.io/{{cookiecutter.gcp_project}}-edge/terraform:0.12.26 terraform plan -refresh=true .
 
-deploy-infra-%::## make deploy-infra-data-stage or make deploy-infra-conceptstream-stage *skips approval to deploy directly
-			@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/$(dash-1)/$(dash-2) eu.gcr.io/trv-hs-src-conceptstream-edge/terraform:0.12.26 terraform deploy -auto-approve -refresh=true .
+deploy-infra-%::## make deploy-infra-{{cookiecutter.name}}-data-stage or make deploy-infra-{{cookiecutter.name}}-stage *skips approval to deploy directly
+			@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/$(dash-1)/$(dash-2) gcr.io/{{cookiecutter.gcp_project}}-edge/terraform:0.12.26 terraform deploy -auto-approve -refresh=true .
 
 ##@ Deploy Locally
 
 deploy::## deploy to stage environment locally 
-			@gcloud --project=trv-hs-src-conceptstream-stage builds submit --config=../cloudbuild.yaml ../
+			@gcloud --project={{cookiecutter.gcp_project}}-stage builds submit --config=../cloudbuild.yaml ../

@@ -40,17 +40,17 @@ gcloud kms keys create argocd-key --location global --keyring argocd --purpose e
 
 gcloud kms keys list --location global --keyring argocd
 
-gcloud kms encrypt --location=global --keyring=argocd --key=argocd-key --project=trv-hs-src-conceptstream-stage --ciphertext-file=infrastructure/resources/ssh/rc5-argocd.enc --plaintext-file=infrastructure/resources/credentials/rc5-argocd
+gcloud kms encrypt --location=global --keyring=argocd --key=argocd-key --project={{cookiecutter.gcp_project}}-stage --ciphertext-file=infrastructure/resources/ssh/rc5-argocd.enc --plaintext-file=infrastructure/resources/credentials/rc5-argocd
 
 ```
 To recreate the origional unencrypted file for the ssh private key you could use the following to store it locally in the credentials folder which is also found in `.gitignore`
 
 ```
-gcloud kms decrypt --location=global --keyring=argocd --key=argocd-key --project=trv-hs-src-conceptstream-stage --ciphertext-file=infrastructure/resources/ssh/rc5-argocd.enc --plaintext-file=infrastructure/resources/credentials/rc5-argocd
+gcloud kms decrypt --location=global --keyring=argocd --key=argocd-key --project={{cookiecutter.gcp_project}}-stage --ciphertext-file=infrastructure/resources/ssh/rc5-argocd.enc --plaintext-file=infrastructure/resources/credentials/rc5-argocd
 ```
 
 When using the gcloud make sure your project is set correctly. For example when trying to access stage use:
-`gcloud config set project trv-hs-src-conceptstream-stage`
+`gcloud config set project {{cookiecutter.gcp_project}}-stage`
 
 ## Folder Structure ./infrastructure/
 

@@ -1,6 +1,6 @@
 variable "project" {
   description = "The id of the gcp project"
-  default     = "trv-hs-src-conceptstream-prod"
+  default     = "{{cookiecutter.gcp_project}}-prod"
 }
 
 variable "region" {

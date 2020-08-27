@@ -39,7 +39,7 @@ module "conceptstream-service-account" {
   environment = var.environment
   region      = var.region
 
-  namespaces = ["src-conceptstream"]
+  namespaces = ["{{cookiecutter.k8s_namespace}}"]
   roles      = ["storage.objectAdmin", "pubsub.admin", "datastore.user"]
 
   k8s_project = var.k8s_project

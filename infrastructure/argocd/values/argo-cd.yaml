@@ -467,7 +467,7 @@ server:
     # Argo CD's externally facing base URL (optional). Required when configuring SSO
     url: https://argocd.example.com
     # Argo CD instance label key
-    application.instanceLabelKey: argocd.argoproj.io/src-conceptstream
+    application.instanceLabelKey: argocd.argoproj.io/{{cookiecutter.k8s_namespace}}
     repositories: |
       - url: git@github.com:trivago/rc5-gcp-manifests.git
         sshPrivateKeySecret:
