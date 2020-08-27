@@ -1,0 +1,47 @@
+---
+enabled: true
+chart: ../charts/argocd-notifications
+namespace: src-conceptscore
+release_name: argo-notifications
+output_path: ../manifests
+values:
+  - ../values/argo-notifications.yaml
+deployments:
+  - name: edge-eu-w4
+    enabled: false
+    additional_options:
+      - "--set argocdUrl=https://argocd-your-namespace.edge.eu-w4.nsp.trv.cloud"
+  - name: stage-eu-w4
+    additional_options:
+      - "--set argocdUrl=https://argocd-your-namespace.stage.eu-w4.nsp.trv.cloud"
+  - name: prod-as-e1
+    enabled: false
+    additional_options:
+      - "--set argocdUrl=https://argocd-your-namespace.prod.as-e1.nsp.trv.cloud"
+  - name: prod-eu-w4
+    additional_options:
+      - "--set argocdUrl=https://argocd-your-namespace.prod.eu-w4.nsp.trv.cloud"
+  - name: prod-us-c1
+    enabled: false
+    additional_options:
+      - "--set argocdUrl=https://argocd-your-namespace.prod.us-c1.nsp.trv.cloud"
+  - name: next-edge-eu-w4
+    enabled: false
+    additional_options:
+      - "--set argocdUrl=https://argocd-your-namespace.next-edge.eu-w4.nsp.trv.cloud"
+  - name: next-stage-eu-w4
+    enabled: false
+    additional_options:
+      - "--set argocdUrl=https://argocd-your-namespace.next-stage.eu-w4.nsp.trv.cloud"
+  - name: next-prod-as-e1
+    enabled: false
+    additional_options:
+      - "--set argocdUrl=https://argocd-your-namespace.next-prod.as-e1.nsp.trv.cloud"
+  - name: next-prod-eu-w4
+    enabled: false
+    additional_options:
+      - "--set argocdUrl=https://argocd-your-namespace.next-prod.eu-w4.nsp.trv.cloud"
+  - name: next-prod-us-c1
+    enabled: false
+    additional_options:
+      - "--set argocdUrl=https://argocd-your-namespace.next-prod.us-c1.nsp.trv.cloud"

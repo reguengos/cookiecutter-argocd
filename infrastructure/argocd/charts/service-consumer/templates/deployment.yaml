@@ -1,0 +1,23 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: accommodation-facility-consumer
+  namespace: src-conceptstream
+spec:
+  schedule: 26 * * * *
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: concept-scores 
+            component: accommodation-facility-consumer
+        spec:
+          serviceAccountName: conceptstream-ksa
+          restartPolicy: OnFailure
+          containers:
+            - name: app
+              image: eu.gcr.io/trv-hs-src-conceptstream-stage/consumer:latest
+              imagePullPolicy: Always
+              env:
+{{ toYaml .Values.containers.env | indent 14 }}

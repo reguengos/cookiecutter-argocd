@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+[[ -v VERBOSE ]] && set -x
+set -eu
+
+# $1 path to root of YAML files / or single file
+
+#
+# kbld-digest
+# -----------
+#
+# Finds all YAML files in the gimanifesten path - the path may also point to a single file -
+# then passes each file through `kbld`, which replaces image tags (nginx:latest)
+# with the image *digest*; adding annotations is turned off.
+#
+# Since `kbld` does not support working on files in-place, the "digested" file is written to disk,
+# the original is then remomanifested and the "digested" file put in its place.
+#
+# Usage:
+#
+#   kbld-digest /path/to/manifests
+#   kbld-digest /path/to/file.yaml
+#
+
+
+manifests=()
+mapfile -t manifests < <(find "${1}" -name '*.yaml')
+
+for manifest in "${manifests[@]}"; do
+    printf "%s/n" "${manifest}"
+    kbld --file="${manifest}" --images-annotation=false > "${manifest}.digested"
+    mv -v "${manifest}.digested" "${manifest}"
+done

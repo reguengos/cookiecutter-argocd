@@ -1,0 +1,10 @@
+containers:
+  env:
+  - name: SERVERS
+    value: "10.246.0.100:9092,10.246.0.101:9092,10.246.0.102:9092"
+  - name: TOPIC
+    value: "source.conceptstreams.edge.output"
+  - name: PYTHONPATH
+    value: ".."
+  - name: PROJECT
+    value: "trv-hs-src-conceptstream-stage"

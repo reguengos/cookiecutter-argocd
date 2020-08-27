@@ -1,0 +1,23 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: producer
+  namespace: src-conceptstream
+spec:
+  schedule: 28 * * * *
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: concept-scores 
+            component: producer
+        spec:
+          serviceAccountName: conceptstream-ksa
+          restartPolicy: OnFailure
+          containers:
+            - name: app
+              image: eu.gcr.io/trv-hs-src-conceptstream-stage/producer:latest
+              imagePullPolicy: Always
+              env:
+{{ toYaml .Values.containers.env | indent 14 }}

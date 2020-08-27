@@ -1,0 +1,86 @@
+server:
+  address: 0.0.0.0
+  # Cloud Run will inject the port into the environment and main.go will replace this value accordingly
+  # according to an in-official source, the default is currently always port 8080
+  # see https://github.com/ahmetb/cloud-run-faq#how-do-i-make-my-web-application-compatible-with-cloud-run
+  port: 8080
+  public_url: https://your-namespace-pr-bot-nchswznn2q-ez.a.run.app
+github:
+  v3_api_url: https://api.github.com/
+  # Fill this section by registering your app with GitHub
+  # this section of the guide over at GitHub is useful:
+  # https://developer.github.com/apps/quickstart-guides/setting-up-your-development-environment/#step-2-register-a-new-github-app
+  # this is called "App ID" in the UI
+  app:
+    integration_id: 0
+    webhook_secret: your-webhook-secret
+    private_key: |
+      your private key here
+    # Prefix for Prometheus metrics
+    # TODO find out if this endpoint would also be publicly accessible
+    #      if yes, how can it be secured?
+app_configuration:
+  metrics_prefix: github_pr_bot.
+  # Comment for testing. Will make the bot post a comment on the pull-request
+  test_comment_trigger_comment: /hello
+  # Comment for testing. Will make the bot submit a ping message to pubsub. you should see the message logged in pubsub2kubectl
+  test_pubsub_ping_comment: /ping
+  # Comment which can be used on an open pr to trigger (re)creation of a preview deployment
+  pubsub_trigger_comment: /preview
+  # Comment which can be used on an open pr to remove a preview deployment
+  pubsub_trigger_remove_comment: /rm preview
+  # Label to set on a pull-request to trigger a preview deployment
+  pubsub_trigger_label: bot/preview
+  # Google Cloud project in which the Pub/Sub topic lives
+  pubsub_project: your-project
+  # Topic to publish to
+  pubsub_topic: previews-edge-eu-w4
+  # Template for what the operator will publish to the Pub/Sub topic
+  # when a pull-request gets the configured label for creating a preview
+  # see https://github.com/trivago/github-pr-preview-bot/blob/v0.2.0-alpha/config-example.yaml#L72 for all available fields
+  pubsub_message_template: |
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: your-namespace-service-{{ .Name }}
+      namespace: your-namespace
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      annotations:
+        author: "{{ .Author }}"
+        branch: "{{ .Branch }}"
+        commitSha: "{{ .CommitSha }}"
+        createdAt: "{{ .CreatedAt }}"
+        htmlUrl: "{{ .HTMLURL }}"
+        mergeable: "{{ .Mergeable }}"
+        mergeableState: "{{ .MergeableState }}"
+        name: "{{ .Name }}"
+        number: "{{ .Number }}"
+        title: "{{ .Title }}"
+        url: "{{ .URL }}"
+        updatedAt: "{{ .UpdatedAt }}"
+        repoName: "your-namespace"
+        repoFullname: "trivago/your-namespace"
+        previewBotUrl: "https://your-namespace-pr-bot-nchswznn2q-ez.a.run.app"
+        previewBotNotificationUrl: "https://your-namespace-pr-bot-nchswznn2q-ez.a.run.app/api/github/pull-requests/{{ .Number }}/previews/your-namespace-service-{{ .Name }}"
+        deploymentName: "edge-eu-w4"
+        clusterName: "search-backend-edge0-eu-w4"
+      labels:
+        env: edge
+        region: europe-west4
+        preview: "true"
+    spec:
+      project: your-namespace
+      source:
+        repoURL: git@github.com:trivago/your-namespace-manifests.git
+        targetRevision: {{ .Branch }}
+        path: edge-eu-w4/your-namespace-service
+        directory:
+          recurse: true
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: your-namespace
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: false

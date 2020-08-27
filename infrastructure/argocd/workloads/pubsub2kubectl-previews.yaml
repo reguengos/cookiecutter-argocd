@@ -1,0 +1,14 @@
+---
+enabled: true
+chart: ../charts/pubsub2kubectl
+namespace: src-conceptscore
+release_name: pubsub2kubectl-previews
+output_path: ../manifests
+values:
+  - "../values/pubsub2kubectl-base.yaml"
+  - "../values/pubsub2kubectl-previews-base.yaml"
+deployments:
+  - name: edge-eu-w4
+    additional_options:
+      - "--set opts.topic=previews-edge-eu-w4"
+      - "--set opts.sub=p2k-previews-edge-eu-w4"

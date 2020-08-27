@@ -1,0 +1,28 @@
+# python
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+
+# MacOS
+.DS_Store
+
+# vscode
+.vscode
+
+# terraform
+*.terraform
+*.terraform/
+**/.terraform/*
+*.tfstate
+*.tfstate.backup
+
+# secrets
+credentials*
+kube_config
+
+# ignore merge conflict files
+*.orig
+
+# Files that are rendered but shouldn't be kept or pushed
+infrastructure/manifests/*

@@ -1,0 +1,13 @@
+---
+enabled: true
+chart: ../charts/service-consumer
+namespace: src-conceptscore
+release_name: src-conceptscore-consumer
+output_path: ../manifests
+deployments:
+  - name: stage-eu-w4
+    values:
+      - ../values/service-consumer-stage-eu-w4.yaml
+  - name: prod-eu-w4
+    values:
+      - ../values/service-consumer-prod-eu-w4.yaml

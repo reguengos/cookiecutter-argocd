@@ -1,0 +1,4 @@
+containers:
+  env:
+  - name: PYTHONPATH
+    value: ".."

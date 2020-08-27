@@ -1,0 +1,10 @@
+containers:
+  env:
+  - name: SERVERS
+    value: "10.246.0.20:9092,10.246.0.21:9092,10.246.0.22:9092,10.246.0.23:9092,10.246.0.24:9092"
+  - name: TOPIC
+    value: "source.conceptstreams.prod.output"
+  - name: PYTHONPATH
+    value: ".."
+  - name: PROJECT
+    value: "trv-hs-src-conceptstream-prod"
