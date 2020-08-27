@@ -1,7 +1,7 @@
 ---
 enabled: true
 chart: ../charts/argo-cd
-namespace: src-conceptscore
+namespace: {{cookiecutter.k8s_namespace}}
 release_name: src-conceptscore-argo-cd
 output_path: ../manifests
 additional_options:

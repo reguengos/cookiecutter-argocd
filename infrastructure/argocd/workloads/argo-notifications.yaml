@@ -1,7 +1,7 @@
 ---
 enabled: true
 chart: ../charts/argocd-notifications
-namespace: src-conceptscore
+namespace: {{cookiecutter.k8s_namespace}}
 release_name: argo-notifications
 output_path: ../manifests
 values:

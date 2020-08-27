@@ -1,7 +1,7 @@
 ---
 enabled: true
 chart: ../charts/pubsub2kubectl
-namespace: src-conceptscore
+namespace: {{cookiecutter.k8s_namespace}}
 release_name: pubsub2kubectl-previews
 output_path: ../manifests
 values:

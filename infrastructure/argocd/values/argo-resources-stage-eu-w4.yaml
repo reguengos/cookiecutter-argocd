@@ -2,7 +2,7 @@
 ## Add any overrides specific to this env
 applications:
   - name: pubsub2kubectl-releases
-    namespace: src-conceptscore
+    namespace: {{cookiecutter.k8s_namespace}}
     additionalLabels: {}
     additionalAnnotations: {}
     project: src-conceptscore
@@ -14,12 +14,12 @@ applications:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: src-conceptscore
+      namespace: {{cookiecutter.k8s_namespace}}
     syncPolicy:
       automated: {}
 
   - name: argo-notifications
-    namespace: src-conceptscore
+    namespace: {{cookiecutter.k8s_namespace}}
     additionalLabels: {}
     additionalAnnotations: {}
     project: src-conceptscore
@@ -31,6 +31,6 @@ applications:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: src-conceptscore
+      namespace: {{cookiecutter.k8s_namespace}}
     syncPolicy:
       automated: {}

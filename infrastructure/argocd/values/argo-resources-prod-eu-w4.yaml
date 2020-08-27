@@ -7,14 +7,14 @@ applications:
     additionalAnnotations: {}
     project: src-conceptscore
     source:
-      repoURL: git@github.com:trivago/src-conceptscore.git
+      repoURL: git@github.com:trivago/{{cookiecutter.name}}.git
       targetRevision: master
       path: infrastructure/kubernetes/delivery/manifests/prod-eu-w4/pubsub2kubectl-releases
       directory:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: src-conceptscore
+      namespace: {{cookiecutter.k8s_namespace}}
     syncPolicy:
       automated: {}
 
@@ -24,13 +24,13 @@ applications:
     additionalAnnotations: {}
     project: src-conceptscore
     source:
-      repoURL: git@github.com:trivago/src-conceptscore.git
+      repoURL: git@github.com:trivago/{{cookiecutter.name}}.git
       targetRevision: master
       path: infrastructure/kubernetes/delivery/manifests/prod-eu-w4/argo-notifications
       directory:
         recurse: true
     destination:
       server: https://kubernetes.default.svc
-      namespace: src-conceptscore
+      namespace: {{cookiecutter.k8s_namespace}}
     syncPolicy:
       automated: {}
