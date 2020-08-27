@@ -5,9 +5,9 @@ applications:
     namespace: {{cookiecutter.k8s_namespace}}
     additionalLabels: {}
     additionalAnnotations: {}
-    project: src-conceptscore
+    project: {{cookiecutter.name}}
     source:
-      repoURL: git@github.com:trivago/rc5-gcp.git
+      repoURL: git@github.com:trivago/{{cookiecutter.name}}-gcp.git
       targetRevision: master
       path: infrastructure/kubernetes/delivery/manifests/stage-eu-w4/pubsub2kubectl-releases
       directory:
@@ -22,9 +22,9 @@ applications:
     namespace: {{cookiecutter.k8s_namespace}}
     additionalLabels: {}
     additionalAnnotations: {}
-    project: src-conceptscore
+    project: {{cookiecutter.name}}
     source:
-      repoURL: git@github.com:trivago/rc5-gcp.git
+      repoURL: git@github.com:trivago/{{cookiecutter.name}}-gcp.git
       targetRevision: master
       path: infrastructure/kubernetes/delivery/manifests/stage-eu-w4/argo-notifications
       directory:

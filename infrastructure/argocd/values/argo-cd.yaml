@@ -469,7 +469,7 @@ server:
     # Argo CD instance label key
     application.instanceLabelKey: argocd.argoproj.io/{{cookiecutter.k8s_namespace}}
     repositories: |
-      - url: git@github.com:trivago/rc5-gcp-manifests.git
+      - url: git@github.com:trivago/{{cookiecutter.name}}-manifests.git
         sshPrivateKeySecret:
           name: argocd-manifests-key
           key: ssh-privatekey

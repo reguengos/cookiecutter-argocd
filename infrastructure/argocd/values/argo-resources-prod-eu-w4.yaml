@@ -5,7 +5,7 @@ applications:
     namespace: your-argocd-namespace
     additionalLabels: {}
     additionalAnnotations: {}
-    project: src-conceptscore
+    project: {{cookiecutter.name}}
     source:
       repoURL: git@github.com:trivago/{{cookiecutter.name}}.git
       targetRevision: master
@@ -22,7 +22,7 @@ applications:
     namespace: your-argocd-namespace
     additionalLabels: {}
     additionalAnnotations: {}
-    project: src-conceptscore
+    project: {{cookiecutter.name}}
     source:
       repoURL: git@github.com:trivago/{{cookiecutter.name}}.git
       targetRevision: master

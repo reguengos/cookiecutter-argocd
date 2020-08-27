@@ -7,7 +7,7 @@ image:
   repository: gcr.io/src-conceptscore/pubsub2kubectl
 
 opts:
-  project: src-conceptscore
+  project: {{cookiecutter.name}}
 
 ## Define the role rules which are bound to the service account
 ## this is the literate body of the kubernetes role resource 'rules' key
