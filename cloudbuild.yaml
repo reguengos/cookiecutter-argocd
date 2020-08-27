@@ -101,7 +101,7 @@ steps:
         EOF
         mv /workspace/infrastructure/resources/ssh/known_hosts /root/.ssh/known_hosts
 
-        git clone --depth=1 git@github.com:trivago/rc5-gcp-manifests.git
+        git clone --depth=1 git@github.com:trivago/{{cookiecutter.name}}-manifests.git
         cd {{cookiecutter.name}}-manifests
         git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
         git config user.name "Google Cloud Build"
