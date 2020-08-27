@@ -1,4 +1,4 @@
 containers:
   env:
-  - name: PYTHONPATH
-    value: ".."
+  - name: ENV_NAME
+    value: "ENV_VALUE"
