@@ -77,7 +77,7 @@ steps:
     args:
       - kms
       - decrypt
-      - --ciphertext-file=/workspace/infrastructure/resources/ssh/rc5-argocd.enc
+      - --ciphertext-file=/workspace/infrastructure/resources/ssh/argocd.enc
       - --plaintext-file=/root/.ssh/id_rsa
       - --location=global
       - --keyring=argocd
