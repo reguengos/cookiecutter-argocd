@@ -1,11 +1,11 @@
 variable "project" {
   description = "The id of the gcp project"
-  default     = "trv-hs-src-conceptstream-stage"
+  default     = "{{cookiecutter.gcp_project}}"
 }
 
 variable "region" {
   description = "The region of the gcp project"
-  default     = "europe-west4"
+  default     = "{{cookiecutter.gcp_region}}"
 }
 
 variable "environment" {

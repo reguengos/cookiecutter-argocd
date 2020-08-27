@@ -1,34 +1,29 @@
 variable "project" {
   description = "The id of the gcp project"
-  default     = "trv-hs-src-conceptstream-stage"
+  default     = "{{cookiecutter.gcp_project}}-edge"
 }
 
 variable "region" {
   description = "The region of the gcp project"
-  default     = "europe-west4"
+  default     = "{{cookiecutter.gcp_region}}"
 }
 
 variable "k8s_cluster" {
   description = "Name of shared k8s cluster"
-  default     = "datproc-shared-stage-eu-w4"
+  default     = "{{cookiecutter.k8s_cluter_name}}"
 }
 
 variable "k8s_project" {
   description = "The id of the gcp project where shared k8s cluster is"
-  default     = "trv-hs-kubernetes-stage"
-}
-
-variable "k8s_project_prod" {
-  description = "The id of the production k8s project in gcp"
-  default     = "trv-hs-kubernetes-prod"
+  default     = "{{cookiecutter.k8s_project}}"
 }
 
 variable "environment" {
   description = "The name of the environment"
-  default     = "stage"
+  default     = "edge"
 }
 
 variable "namespace" {
   description = "The namespace of the project used in the shared kubernetes cluster"
-  default     = "src-conceptstream"
+  default     = "{{cookiecutter.k8s_namespace}}"
 }

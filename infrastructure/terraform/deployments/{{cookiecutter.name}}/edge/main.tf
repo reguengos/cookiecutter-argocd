@@ -1,7 +1,7 @@
 terraform {
   backend "gcs" {
-    bucket = "conceptstream-terraform"
-    prefix = "terraform/stage/conceptstream"
+    bucket = "{{cookiecutter.name}}-terraform"
+    prefix = "terraform/edge/{{cookiecutter.name}}"
   }
 }
 provider "google" {
@@ -36,14 +36,14 @@ data "google_project" "k8s_project_prod" {
   project_id = var.k8s_project_prod
 }
 
-module "conceptstream-service-account" {
+module "{{cookiecutter.name}}-service-account" {
   source = "../../../modules/service-account"
 
-  name        = "conceptstream-ksa"
+  name        = "{{cookiecutter.name}}-ksa"
   environment = var.environment
   region      = var.region
 
-  namespaces = ["src-conceptstream"]
+  namespaces = ["src-{{cookiecutter.name}}"]
   roles      = ["storage.objectAdmin", "pubsub.admin", "datastore.user"]
 
   k8s_project = var.k8s_project
@@ -54,7 +54,7 @@ resource "google_storage_bucket_iam_binding" "binding" {
   role   = "roles/storage.objectAdmin"
 
   members = [
-    "serviceAccount:${var.k8s_project}.svc.id.goog[${var.namespace}/${module.conceptstream-service-account.name}]"
+    "serviceAccount:${var.k8s_project}.svc.id.goog[${var.namespace}/${module.{{cookiecutter.name}}-service-account.name}]"
   ]
 }
 
@@ -75,34 +75,3 @@ resource "google_project_iam_member" "kubernetes-service-compute-user-prod" {
   member  =  "serviceAccount:${data.google_project.k8s_project_prod.number}-compute@developer.gserviceaccount.com"
 }
 
-module "conceptstream-pubsub-storage-notification" {
-  source = "../../../modules/pubsub-storage-notification"
-
-  topic_name          = "rc5-concept-scores"
-  bucket              = "${terraform.workspace}_${var.environment}_concept_scores"
-  object_name_prefix  = "concept-scores/succeeded"
-
-  message_retention_duration  = "1200s"
-  retain_acked_messages       = false
-  ack_deadline_seconds        = 10
-  ttl                         = "300000.5s"
-
-  members     = ["serviceAccount:service-${data.google_project.project.number}@gs-project-accounts.iam.gserviceaccount.com"]
-  event_types = ["OBJECT_FINALIZE"]
-}
-
-module "rawinput-pubsub-storage-notification" {
-  source = "../../../modules/pubsub-storage-notification"
-
-  topic_name          = "rc5-raw-input"
-  bucket              = "${terraform.workspace}_${var.environment}_concept_scores"
-  object_name_prefix  = "raw-input"
-
-  message_retention_duration  = "1200s"
-  retain_acked_messages       = false
-  ack_deadline_seconds        = 10
-  ttl                         = "300000.5s"
-
-  members     = ["serviceAccount:service-${data.google_project.project.number}@gs-project-accounts.iam.gserviceaccount.com"]
-  event_types = ["OBJECT_FINALIZE"]
-}
