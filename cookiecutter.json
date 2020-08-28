@@ -1,0 +1,9 @@
+{
+  "name": "myproject",
+  "project_short_description": "A project.",
+  "gcp_project": "trv-pillar-domain-name",
+  "gcp_region": "europe-west4",
+  "k8s_cluter_name": "datproc-shared-stage-eu-w4",
+  "k8s_project": "trv-hs-kubernetes-stage",
+  "k8s_namespace": "kubernetes-namespace-name"
+}
