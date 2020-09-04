@@ -1,0 +1,49 @@
+## Configure Argo Application resources
+##
+## The templates in this chart were copied from
+## https://github.com/argoproj/argo-helm/blob/master/charts/argo-cd/README.md
+## and the structure of the values slightly adjusted.
+
+## Define projects in argocd
+## while we deploy one argocd per cluster and per namespace, default is all we need
+## https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/project.yaml
+projects:
+  ## This is the sane default for the deployment
+  ## this does not have to be repeated in the value files
+  - name: {{cookiecutter.k8s_namespace}}
+    namespace: {{cookiecutter.k8s_namespace}}
+    additionalLabels: {}
+    additionalAnnotations: {}
+    description: Default project for deployments to this cluster
+    sourceRepos:
+      - '*'
+    destinations:
+      - namespace: {{cookiecutter.k8s_namespace}}
+        server: https://kubernetes.default.svc
+    clusterResourceWhitelist: []
+    namespaceResourceBlacklist: []
+    orphanedResources: {}
+    roles: []
+
+## Define applications that argocd cares for
+## Resource docs: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/application.yaml
+## Helm will convert the top level keys to yaml 1:1
+## i.e. source, destination, syncPolicy, ignoreDifferences can be written as in the resource docs
+##
+## In order to see how to connect to private GitHub repositories, please find the Argo Cd setup guide in the docs folder
+applications: []
+#  - name: guestbook
+#    namespace: your-namespace
+#    additionalLabels: {}
+#    additionalAnnotations: {}
+#    project: default
+#    source:
+#      repoURL: https://github.com/argoproj/argocd-example-apps.git
+#      targetRevision: HEAD
+#      path: guestbook
+#      directory:
+#        recurse: true
+#    destination:
+#      server: https://kubernetes.default.svc
+#      namespace: your-namespace
+#    syncPolicy: {}

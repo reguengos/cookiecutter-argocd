@@ -1,0 +1,45 @@
+---
+enabled: true
+chart: ../charts/argo-resources
+namespace: {{cookiecutter.k8s_namespace}}
+release_name: argo-resources
+output_path: ../manifests
+deployments:
+  - name: edge-eu-w4
+    enabled: false
+    values:
+      - ../values/argo-resources-edge-eu-w4.yaml
+  - name: stage-eu-w4
+    values:
+      - ../values/argo-resources-stage-eu-w4.yaml
+  - name: prod-as-e1
+    enabled: false
+    values:
+      - ../values/argo-resources-prod-as-e1.yaml
+  - name: prod-eu-w4
+    values:
+      - ../values/argo-resources-prod-eu-w4.yaml
+  - name: prod-us-c1
+    enabled: false
+    values:
+      - ../values/argo-resources-prod-us-c1.yaml
+  - name: next-edge-eu-w4
+    enabled: false
+    values:
+      - ../values/argo-resources-edge-eu-w4.yaml
+  - name: next-stage-eu-w4
+    enabled: false
+    values:
+      - ../values/argo-resources-stage-eu-w4.yaml
+  - name: next-prod-as-e1
+    enabled: false
+    values:
+      - ../values/argo-resources-prod-as-e1.yaml
+  - name: next-prod-eu-w4
+    enabled: false
+    values:
+      - ../values/argo-resources-prod-eu-w4.yaml
+  - name: next-prod-us-c1
+    enabled: false
+    values:
+      - ../values/argo-resources-prod-us-c1.yaml

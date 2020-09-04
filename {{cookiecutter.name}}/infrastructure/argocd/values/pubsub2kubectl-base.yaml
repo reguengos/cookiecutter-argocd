@@ -1,0 +1,21 @@
+---
+# Base for all pubsub2kubectl deployments
+# whether for previews of for releases
+
+image:
+  tag: v0.1.2-alpha
+  repository: gcr.io/src-conceptscore/pubsub2kubectl
+
+opts:
+  project: {{cookiecutter.name}}
+
+## Define the role rules which are bound to the service account
+## this is the literate body of the kubernetes role resource 'rules' key
+## the default allows everything, please adjust accordingly
+roleRules:
+  - apiGroups:
+      - "argoproj.io"
+    resources:
+      - "applications"
+    verbs:
+      - "*"

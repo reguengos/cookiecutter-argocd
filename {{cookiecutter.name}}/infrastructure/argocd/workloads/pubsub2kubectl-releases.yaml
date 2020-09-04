@@ -1,0 +1,58 @@
+---
+enabled: true
+chart: ../charts/pubsub2kubectl
+namespace: {{cookiecutter.k8s_namespace}}
+release_name: pubsub2kubectl-releases
+output_path: ../manifests
+values:
+  - "../values/pubsub2kubectl-base.yaml"
+  - "../values/pubsub2kubectl-releases-base.yaml"
+deployments:
+  - name: edge-eu-w4
+    enabled: false
+    additional_options:
+      - "--set opts.topic=releases-edge-eu-w4"
+      - "--set opts.sub=p2k-releases-edge-eu-w4"
+  - name: stage-eu-w4
+    additional_options:
+      - "--set opts.topic=releases-stage-eu-w4"
+      - "--set opts.sub=p2k-releases-stage-eu-w4"
+  - name: prod-as-e1
+    enabled: false
+    additional_options:
+      - "--set opts.topic=releases-prod-as-e1"
+      - "--set opts.sub=p2k-releases-prod-as-e1"
+  - name: prod-eu-w4
+    additional_options:
+      - "--set opts.topic=releases-prod-eu-w4"
+      - "--set opts.sub=p2k-releases-prod-eu-w4"
+  - name: prod-us-c1
+    enabled: false
+    additional_options:
+      - "--set opts.topic=releases-prod-us-c1"
+      - "--set opts.sub=p2k-releases-prod-us-c1"
+  - name: next-edge-eu-w4
+    enabled: false
+    additional_options:
+      - "--set opts.topic=releases-edge-eu-w4"
+      - "--set opts.sub=p2k-releases-next-edge-eu-w4"
+  - name: next-stage-eu-w4
+    enabled: false
+    additional_options:
+      - "--set opts.topic=releases-stage-eu-w4"
+      - "--set opts.sub=p2k-releases-next-stage-eu-w4"
+  - name: next-prod-as-e1
+    enabled: false
+    additional_options:
+      - "--set opts.topic=releases-prod-as-e1"
+      - "--set opts.sub=p2k-releases-next-prod-as-e1"
+  - name: next-prod-eu-w4
+    enabled: false
+    additional_options:
+      - "--set opts.topic=releases-prod-eu-w4"
+      - "--set opts.sub=p2k-releases-next-prod-eu-w4"
+  - name: next-prod-us-c1
+    enabled: false
+    additional_options:
+      - "--set opts.topic=releases-prod-us-c1"
+      - "--set opts.sub=p2k-releases-next-prod-us-c1"

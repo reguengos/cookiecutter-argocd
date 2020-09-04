@@ -1,0 +1,29 @@
+---
+enabled: true
+chart: ../charts/argo-cd
+namespace: {{cookiecutter.k8s_namespace}}
+release_name: src-conceptscore-argo-cd
+output_path: ../manifests
+additional_options:
+  - "--skip-crds"
+values:
+  - ../values/argo-cd.yaml
+deployments:
+  - name: edge-eu-w4
+    enabled: false
+  - name: stage-eu-w4
+  - name: prod-as-e1
+    enabled: false
+  - name: prod-eu-w4
+  - name: prod-us-c1
+    enabled: false
+  - name: next-edge-eu-w4
+    enabled: false
+  - name: next-stage-eu-w4
+    enabled: false
+  - name: next-prod-as-e1
+    enabled: false
+  - name: next-prod-eu-w4
+    enabled: false
+  - name: next-prod-us-c1
+    enabled: false

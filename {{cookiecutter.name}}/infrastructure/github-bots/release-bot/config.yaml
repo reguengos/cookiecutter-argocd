@@ -1,0 +1,338 @@
+{% raw %}
+server:
+  address: 0.0.0.0
+  # Cloud Run will inject the port into the environment and main.go will replace this value accordingly
+  # according to an in-official source, the default is currently always port 8080
+  # see https://github.com/ahmetb/cloud-run-faq#how-do-i-make-my-web-application-compatible-with-cloud-run
+  port: 8080
+  # Cloud Run URl of your bot
+  public_url: http://localhost:8080
+github:
+  v3_api_url: https://api.github.com/
+  # Fill this section by registering your app with GitHub
+  # this section of the guide over at GitHub is useful:
+  # https://developer.github.com/apps/quickstart-guides/setting-up-your-development-environment/#step-2-register-a-new-github-app
+  # this is called "App ID" in the UI
+  app:
+    integration_id: 0
+    webhook_secret: your-webhook-secret
+    private_key: |
+      your private key here
+    # log level to use [trace|debug|info|warn|error|fatal|panic] (info)
+app_configuration:
+  logging:
+    level: debug
+    # log format to use [pretty|json] (json) pretty is human readable and nice for development
+    format: json
+    # Prefix for Prometheus metrics
+    # TODO find out if this endpoint would also be publicly accessible
+    # TODO publish metrics; they are not accessible at the moment; see https://github.com/rcrowley/go-metrics#publishing-metrics
+    #      if yes, how can it be secured?
+  metrics_prefix: github_release_bot.
+  # API key to use when calling endpoints other than github, e.g. /api/git/* (/liveness is not covered)
+  # to be submitted as HTTP header 'X-Trv-Github-Release-Bot-Token'
+  # The value is case-sensitive, the name of the header is not
+  api_key: Bohloo8foovooch3oomaipah4yaGhoic
+  # Configure storage for metadata, e.g. linking source commits to manifests repository commits
+  # enable/disable the usage of metadata storage
+  metadata_storage:
+    enabled: true
+    # Storage driver to use; 'gcs' is currently the only option
+    driver: gcs
+    # Config for GCS driver
+    # Storage bucket to use; can be the same bucket used to provide the config for the release bot
+    gcs_config:
+      bucket: your-project_your-namespace_release_bot
+      # List of repositories to handle releases for
+  repositories:
+    - name: trivago/your-namespace
+      environments:
+        - name: edge-eu-w4
+          release_name_substring: -edge
+          pubsub_project: your-project
+          pubsub_topic: releases-edge-eu-w4
+          pubsub_message_template: |
+            apiVersion: argoproj.io/v1alpha1
+            kind: Application
+            metadata:
+              name: your-namespace-service
+              namespace: your-namespace
+              finalizers:
+                - resources-finalizer.argocd.argoproj.io
+              annotations:
+                releaseName: "{{ .ReleaseName }}"
+                releaseTag: "{{ .ReleaseTag }}"
+                releaseCommitSha: {{ .ReleaseCommitSha }}
+                releaseManifestsCommitSha: {{ .ReleaseManifestsCommitSha }}
+                releaseAuthorLogin: "{{ .ReleaseAuthorLogin }}"
+                releaseCreatedAt: "{{ .ReleaseCreatedAt }}"
+                releasePublishedAt: "{{ .ReleasePublishedAt }}"
+                releaseID: "{{ .ReleaseID }}"
+                releaseHTMLURL: "{{ .ReleaseHTMLURL }}"
+                releaseURL: "{{ .ReleaseURL }}"
+                repoName: "{{ .RepoName }}"
+                repoFullName: "{{ .RepoFullName }}"
+                repoCloneURL: "{{ .RepoCloneURL }}"
+                repoURL: "{{ .RepoURL }}"
+                repoID: "{{ .RepoID }}"
+                deploymentName: "edge-eu-w4"
+                clusterName: "search-backend-edge0-eu-w4"
+              labels:
+                env: edge
+                region: europe-west4
+            spec:
+              project: your-namespace
+              source:
+                repoURL: git@github.com:trivago/your-namespace-manifests.git
+                targetRevision: {{ .ReleaseManifestsCommitSha }}
+                path: edge-eu-w4/your-namespace-service
+                directory:
+                  recurse: true
+              destination:
+                server: https://kubernetes.default.svc
+                namespace: your-namespace
+              syncPolicy:
+                automated:
+                  prune: false
+                  selfHeal: false
+        - name: stage-eu-w4
+          release_name_substring: -stage
+          pubsub_project: your-project
+          pubsub_topic: releases-stage-eu-w4
+          pubsub_message_template: |
+            apiVersion: argoproj.io/v1alpha1
+            kind: Application
+            metadata:
+              name: your-namespace-service
+              namespace: your-namespace
+              finalizers:
+                - resources-finalizer.argocd.argoproj.io
+              annotations:
+                releaseName: "{{ .ReleaseName }}"
+                releaseTag: "{{ .ReleaseTag }}"
+                releaseCommitSha: {{ .ReleaseCommitSha }}
+                releaseManifestsCommitSha: {{ .ReleaseManifestsCommitSha }}
+                releaseAuthorLogin: "{{ .ReleaseAuthorLogin }}"
+                releaseCreatedAt: "{{ .ReleaseCreatedAt }}"
+                releasePublishedAt: "{{ .ReleasePublishedAt }}"
+                releaseID: "{{ .ReleaseID }}"
+                releaseHTMLURL: "{{ .ReleaseHTMLURL }}"
+                releaseURL: "{{ .ReleaseURL }}"
+                repoName: "{{ .RepoName }}"
+                repoFullName: "{{ .RepoFullName }}"
+                repoCloneURL: "{{ .RepoCloneURL }}"
+                repoURL: "{{ .RepoURL }}"
+                repoID: "{{ .RepoID }}"
+                deploymentName: "stage-eu-w4"
+                clusterName: "search-backend-stage0-eu-w4"
+              labels:
+                env: stage
+                region: europe-west4
+            spec:
+              project: your-namespace
+              source:
+                repoURL: git@github.com:trivago/your-namespace-manifests.git
+                targetRevision: {{ .ReleaseManifestsCommitSha }}
+                path: stage-eu-w4/your-namespace-service
+                directory:
+                  recurse: true
+              destination:
+                server: https://kubernetes.default.svc
+                namespace: your-namespace
+              syncPolicy:
+                automated:
+                  prune: false
+                  selfHeal: false
+        - name: prod-as-e1
+          release_name_substring: -prod
+          pubsub_project: your-project
+          pubsub_topic: releases-prod-as-e1
+          pubsub_message_template: |
+            apiVersion: argoproj.io/v1alpha1
+            kind: Application
+            metadata:
+              name: your-namespace-service
+              namespace: your-namespace
+              finalizers:
+                - resources-finalizer.argocd.argoproj.io
+              annotations:
+                releaseName: "{{ .ReleaseName }}"
+                releaseTag: "{{ .ReleaseTag }}"
+                releaseCommitSha: {{ .ReleaseCommitSha }}
+                releaseManifestsCommitSha: {{ .ReleaseManifestsCommitSha }}
+                releaseAuthorLogin: "{{ .ReleaseAuthorLogin }}"
+                releaseCreatedAt: "{{ .ReleaseCreatedAt }}"
+                releasePublishedAt: "{{ .ReleasePublishedAt }}"
+                releaseID: "{{ .ReleaseID }}"
+                releaseHTMLURL: "{{ .ReleaseHTMLURL }}"
+                releaseURL: "{{ .ReleaseURL }}"
+                repoName: "{{ .RepoName }}"
+                repoFullName: "{{ .RepoFullName }}"
+                repoCloneURL: "{{ .RepoCloneURL }}"
+                repoURL: "{{ .RepoURL }}"
+                repoID: "{{ .RepoID }}"
+                deploymentName: "prod-as-e1"
+                clusterName: "search-backend-prod0-as-e1"
+              labels:
+                env: prod
+                region: asia-east1
+            spec:
+              project: your-namespace
+              source:
+                repoURL: git@github.com:trivago/your-namespace-manifests.git
+                targetRevision: {{ .ReleaseManifestsCommitSha }}
+                path: prod-as-e1/your-namespace-service
+                directory:
+                  recurse: true
+              destination:
+                server: https://kubernetes.default.svc
+                namespace: your-namespace
+              syncPolicy:
+                automated:
+                  prune: false
+                  selfHeal: false
+        - name: prod-eu-w4
+          release_name_substring: -prod
+          pubsub_project: your-project
+          pubsub_topic: releases-prod-eu-w4
+          pubsub_message_template: |
+            apiVersion: argoproj.io/v1alpha1
+            kind: Application
+            metadata:
+              name: your-namespace-service
+              namespace: your-namespace
+              finalizers:
+                - resources-finalizer.argocd.argoproj.io
+              annotations:
+                releaseName: "{{ .ReleaseName }}"
+                releaseTag: "{{ .ReleaseTag }}"
+                releaseCommitSha: {{ .ReleaseCommitSha }}
+                releaseManifestsCommitSha: {{ .ReleaseManifestsCommitSha }}
+                releaseAuthorLogin: "{{ .ReleaseAuthorLogin }}"
+                releaseCreatedAt: "{{ .ReleaseCreatedAt }}"
+                releasePublishedAt: "{{ .ReleasePublishedAt }}"
+                releaseID: "{{ .ReleaseID }}"
+                releaseHTMLURL: "{{ .ReleaseHTMLURL }}"
+                releaseURL: "{{ .ReleaseURL }}"
+                repoName: "{{ .RepoName }}"
+                repoFullName: "{{ .RepoFullName }}"
+                repoCloneURL: "{{ .RepoCloneURL }}"
+                repoURL: "{{ .RepoURL }}"
+                repoID: "{{ .RepoID }}"
+                deploymentName: "prod-eu-w4"
+                clusterName: "search-backend-prod0-eu-w4"
+              labels:
+                env: prod
+                region: europe-west4
+            spec:
+              project: your-namespace
+              source:
+                repoURL: git@github.com:trivago/your-namespace-manifests.git
+                targetRevision: {{ .ReleaseManifestsCommitSha }}
+                path: prod-eu-w4/your-namespace-service
+                directory:
+                  recurse: true
+              destination:
+                server: https://kubernetes.default.svc
+                namespace: your-namespace
+              syncPolicy:
+                automated:
+                  prune: false
+                  selfHeal: false
+        - name: prod-dca-us-c1
+          release_name_substring: -prod
+          pubsub_project: your-project
+          pubsub_topic: releases-prod-us-c1
+          pubsub_message_template: |
+            apiVersion: argoproj.io/v1alpha1
+            kind: Application
+            metadata:
+              name: your-namespace-service-dca
+              namespace: your-namespace
+              finalizers:
+                - resources-finalizer.argocd.argoproj.io
+              annotations:
+                releaseName: "{{ .ReleaseName }}"
+                releaseTag: "{{ .ReleaseTag }}"
+                releaseCommitSha: {{ .ReleaseCommitSha }}
+                releaseManifestsCommitSha: {{ .ReleaseManifestsCommitSha }}
+                releaseAuthorLogin: "{{ .ReleaseAuthorLogin }}"
+                releaseCreatedAt: "{{ .ReleaseCreatedAt }}"
+                releasePublishedAt: "{{ .ReleasePublishedAt }}"
+                releaseID: "{{ .ReleaseID }}"
+                releaseHTMLURL: "{{ .ReleaseHTMLURL }}"
+                releaseURL: "{{ .ReleaseURL }}"
+                repoName: "{{ .RepoName }}"
+                repoFullName: "{{ .RepoFullName }}"
+                repoCloneURL: "{{ .RepoCloneURL }}"
+                repoURL: "{{ .RepoURL }}"
+                repoID: "{{ .RepoID }}"
+                deploymentName: "prod-dca-us-c1"
+                clusterName: "search-backend-prod0-us-c1"
+              labels:
+                env: prod
+                region: us-central1
+            spec:
+              project: your-namespace
+              source:
+                repoURL: git@github.com:trivago/your-namespace-manifests.git
+                targetRevision: {{ .ReleaseManifestsCommitSha }}
+                path: prod-dca-us-c1/your-namespace-service
+                directory:
+                  recurse: true
+              destination:
+                server: https://kubernetes.default.svc
+                namespace: your-namespace
+              syncPolicy:
+                automated:
+                  prune: false
+                  selfHeal: false
+        - name: prod-sfo-us-c1
+          release_name_substring: -prod
+          pubsub_project: your-project
+          pubsub_topic: releases-prod-us-c1
+          pubsub_message_template: |
+            apiVersion: argoproj.io/v1alpha1
+            kind: Application
+            metadata:
+              name: your-namespace-service-sfo
+              namespace: your-namespace
+              finalizers:
+                - resources-finalizer.argocd.argoproj.io
+              annotations:
+                releaseName: "{{ .ReleaseName }}"
+                releaseTag: "{{ .ReleaseTag }}"
+                releaseCommitSha: {{ .ReleaseCommitSha }}
+                releaseManifestsCommitSha: {{ .ReleaseManifestsCommitSha }}
+                releaseAuthorLogin: "{{ .ReleaseAuthorLogin }}"
+                releaseCreatedAt: "{{ .ReleaseCreatedAt }}"
+                releasePublishedAt: "{{ .ReleasePublishedAt }}"
+                releaseID: "{{ .ReleaseID }}"
+                releaseHTMLURL: "{{ .ReleaseHTMLURL }}"
+                releaseURL: "{{ .ReleaseURL }}"
+                repoName: "{{ .RepoName }}"
+                repoFullName: "{{ .RepoFullName }}"
+                repoCloneURL: "{{ .RepoCloneURL }}"
+                repoURL: "{{ .RepoURL }}"
+                repoID: "{{ .RepoID }}"
+                deploymentName: "prod-sfo-us-c1"
+                clusterName: "search-backend-prod0-us-c1"
+              labels:
+                env: prod
+                region: us-central1
+            spec:
+              project: your-namespace
+              source:
+                repoURL: git@github.com:trivago/your-namespace-manifests.git
+                targetRevision: {{ .ReleaseManifestsCommitSha }}
+                path: prod-sfo-us-c1/your-namespace-service
+                directory:
+                  recurse: true
+              destination:
+                server: https://kubernetes.default.svc
+                namespace: your-namespace
+              syncPolicy:
+                automated:
+                  prune: false
+                  selfHeal: false
+{% endraw %}

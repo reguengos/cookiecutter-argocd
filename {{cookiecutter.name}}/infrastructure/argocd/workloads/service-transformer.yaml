@@ -1,0 +1,13 @@
+---
+enabled: true
+chart: ../charts/service-transformer
+namespace: {{cookiecutter.k8s_namespace}}
+release_name: src-conceptscore-transformer
+output_path: ../manifests
+deployments:
+  - name: stage-eu-w4
+    values:
+      - ../values/service-transformer-stage-eu-w4.yaml
+  - name: prod-eu-w4
+    values:
+      - ../values/service-transformer-prod-eu-w4.yaml
