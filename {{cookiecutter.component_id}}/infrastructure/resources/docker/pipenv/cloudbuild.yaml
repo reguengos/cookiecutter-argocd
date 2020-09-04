@@ -1,0 +1,12 @@
+---
+steps:
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    env:
+      - PIPENVVERSION=v01
+    args:
+      - -c
+      - |
+        docker build --tag gcr.io/$PROJECT_ID/pipenv:$${PIPENVVERSION} .
+
+        docker push gcr.io/$PROJECT_ID/pipenv:$${PIPENVVERSION}

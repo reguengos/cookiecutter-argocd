@@ -1,0 +1,97 @@
+steps:
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: build_consumer
+    waitFor:
+      - '-'
+    entrypoint: make
+    dir: infrastructure
+    args:
+      - build-consumer
+
+  - name: gcr.io/${PROJECT_ID}/cloudbuilder:v3
+    id: helm_template
+    waitFor:
+      - build_consumer
+    entrypoint: make
+    dir: infrastructure
+    args:
+      - services
+    env:
+      - 'BRANCH_NAME=$BRANCH_NAME'
+
+  - name: gcr.io/${PROJECT_ID}/cloudbuilder:v3
+    id: digest_manifests
+    waitFor:
+      - helm_template
+    entrypoint: make
+    dir: infrastructure
+    args:
+      - digest
+
+  - name: gcr.io/cloud-builders/gcloud
+    id: kms
+    waitFor:
+      - '-'
+    entrypoint: gcloud
+    args:
+      - kms
+      - decrypt
+      - --ciphertext-file=/workspace/infrastructure/resources/ssh/argocd.enc
+      - --plaintext-file=/root/.ssh/id_rsa
+      - --location=global
+      - --keyring=argocd
+      - --key=argocd-key
+    volumes:
+      - name: ssh
+        path: /root/.ssh
+
+  - name: gcr.io/cloud-builders/git
+    id: git_identity
+    waitFor:
+      - kms
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        chmod 600 /root/.ssh/id_rsa
+        cat <<EOF >/root/.ssh/config
+        Hostname github.com
+        IdentityFile /root/.ssh/id_rsa
+        EOF
+        mv /workspace/infrastructure/resources/ssh/known_hosts /root/.ssh/known_hosts
+
+        git clone --depth=1 git@github.com:trivago/{{cookiecutter.component_id}}-manifests.git
+        cd {{cookiecutter.component_id}}-manifests
+        git config user.email $(gcloud auth list --filter=status:ACTIVE --format='value(account)')
+        git config user.name "Google Cloud Build"
+    volumes:
+      - name: ssh
+        path: /root/.ssh
+
+  - name: gcr.io/${PROJECT_ID}/cloudbuilder:v3
+    id: push_manifests
+    waitFor:
+      - git_identity
+      - digest_manifests
+    entrypoint: bash
+    dir: {{cookiecutter.component_id}}-manifests
+    args:
+      - -c
+      - |
+        branch_exists=$(git show-ref refs/heads/"${BRANCH_NAME}")
+        if [[ "${branch_exists}" == "" ]]; then
+          git branch "${BRANCH_NAME}"
+        fi
+        git checkout "${BRANCH_NAME}"
+
+        rsync -r --delete --exclude=.git --exclude=README.md --exclude=.gitkeep \
+          ../infrastructure/manifests/ .
+
+        git add .
+        git commit -am "Manifest from commit ${SHORT_SHA}"
+        git push --set-upstream origin "${BRANCH_NAME}" --force
+
+    volumes:
+      - name: ssh
+        path: /root/.ssh
+

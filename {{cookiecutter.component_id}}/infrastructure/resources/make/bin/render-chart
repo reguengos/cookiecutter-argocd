@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+[[ -v VERBOSE ]] && set -x
+set -euo pipefail
+
+#
+# render-chart is a helper utility which reads a yaml config file
+# and renders the configured deployments for the workload
+#
+# usage:
+#   render-chart path/to/workload/config.yaml
+#
+# dependencies:
+#   - bash 4+
+#   - yq (https://github.com/mikefarah/yq)
+#   - helm v3
+
+# prints an info log to stdout
+info() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')][$(basename "$0")][inf]: $*"
+}
+
+# prints a warn log to stdout
+warn() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')][$(basename "$0")][wrn]: $*"
+}
+
+# prints an error to stderr and exits with code 1
+err() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')][$(basename "$0")][err]: $*" >&2
+  exit 1
+}
+
+function _check_dependencies() {
+  [[ ! -x "$(command -v helm)" ]] && err "'helm' is either not available or not executable"
+  [[ ! -x "$(command -v yq)" ]] && err "'yq' is either not available or not executable"
+
+  helm_version=$(helm version | sed -En 's/.*Version\:"v([0-9]+)\.([0-9]+)\.([0-9]+)".*/\1/p')
+  if [[ "${helm_version}" != "3" ]]; then
+      err "helm version must be 3+"
+  fi
+}
+
+function main() {
+  _check_dependencies
+
+  local file=$1
+  cd "$(dirname "${file}")"
+
+  environment=$2
+
+  # helper to read from designated yaml file; uses local var of func main
+  function _read() {
+    yq read "$(basename "${file}")" "$@"
+  }
+
+  chart=$(_read "chart" --defaultValue "./")
+  enabled=$(_read "enabled" --defaultValue "false") &&
+    [[ "${enabled}" == "false" ]] && err "workload in '${file}' is either disabled or missing the 'enabled' key, skipping ..."
+  namespace=$(_read "namespace")
+  release_name=$(_read "release_name" --defaultValue "untitled-release")
+  output_path=$(_read "output_path" --defaultValue "./manifests")
+  additional_options=$(_read "additional_options[*]")
+  values=$(_read "values[*]")
+
+  for deployment in $(_read "deployments[*].name"); do
+
+    info "processing deployment '${deployment}'"
+    deployment_enabled=$(_read "deployments.(name==${deployment}).enabled" --defaultValue "true") &&
+      [[ "${deployment_enabled}" == "false" ]] && warn "deployment is disabled" && continue
+
+    [[ ${deployment} != ${environment}* ]] && warn "deployment doesn't match environment" && continue
+
+    flags=()
+
+    # first add any default value files from the top level
+    for values_file in ${values}; do
+      if [[ -f "${values_file}" ]]; then flags+=("--values=${values_file}"); \
+        else warn "values file '${values_file}' does not exist or is not readable, skipping ..."; fi
+    done
+
+    # then add all value files on the deployment level
+    for values_file in $(_read "deployments.(name==${deployment}).values[*]"); do
+      if [[ -f "${values_file}" ]]; then flags+=("--values=${values_file}"); \
+        else warn "values file '${values_file}' does not exist or is not readable, skipping ..."; fi
+    done
+
+    # check if the release name was specified
+    deployment_release_name=$(_read "deployments.(name==${deployment}).release_name" --defaultValue "${release_name}")
+
+    # build & clean output path
+    deployment_output_path="${output_path}/${deployment}/${release_name}"
+    rm -rf "${deployment_output_path}" >> /dev/null || true
+    flags+=("--output-dir=${deployment_output_path}")
+
+    # add all additional options from the top level
+    for option in ${additional_options}; do
+      flags+=("${option}")
+    done
+
+    # add additional options from the deployment level
+    for option in $(_read "deployments.(name==${deployment}).additional_options[*]"); do
+      flags+=("${option}")
+    done
+
+    [[ -n "${namespace}" ]] && flags+=("--namespace=${namespace}")
+
+    if [[ -v VERBOSE ]]; then
+      helm template "${deployment_release_name}" "${chart}" "${flags[@]}"
+    else
+      helm template "${deployment_release_name}" "${chart}" "${flags[@]}" >> /dev/null
+    fi
+  done
+
+  info "done"
+  return
+}
+
+# $1 file to process
+main "$1" "$2"

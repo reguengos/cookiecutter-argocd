@@ -1,0 +1,36 @@
+---
+## Add any overrides specific to this env
+applications:
+  - name: pubsub2kubectl-releases
+    namespace: your-argocd-namespace
+    additionalLabels: {}
+    additionalAnnotations: {}
+    project: {{cookiecutter.component_id}}
+    source:
+      repoURL: git@github.com:trivago/{{cookiecutter.component_id}}.git
+      targetRevision: master
+      path: infrastructure/kubernetes/delivery/manifests/prod-eu-w4/pubsub2kubectl-releases
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: {{cookiecutter.k8s_namespace}}
+    syncPolicy:
+      automated: {}
+
+  - name: argo-notifications
+    namespace: your-argocd-namespace
+    additionalLabels: {}
+    additionalAnnotations: {}
+    project: {{cookiecutter.component_id}}
+    source:
+      repoURL: git@github.com:trivago/{{cookiecutter.component_id}}.git
+      targetRevision: master
+      path: infrastructure/kubernetes/delivery/manifests/prod-eu-w4/argo-notifications
+      directory:
+        recurse: true
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: {{cookiecutter.k8s_namespace}}
+    syncPolicy:
+      automated: {}

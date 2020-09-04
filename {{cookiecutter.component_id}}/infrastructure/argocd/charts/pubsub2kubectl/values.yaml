@@ -1,0 +1,114 @@
+{% raw %}
+# Default values for pubsub2kubectl.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## It should be ok to run multiple replicas or even auto-scale them
+## as each would pull messages from pubsub and ack them right away
+## if you experience any side effects, please contribute it to the Runbook
+replicaCount: 1
+
+image:
+  tag: ""
+  repository: gcr.io/${PROJECT_ID}/pubsub2kubectl
+  pullPolicy: IfNotPresent
+
+## options to the app
+opts:
+  ## google cloud project the sub sub topic is in
+  project: ${PROJECT_ID}
+  ## google pubsub topic
+  topic: pubsub2kubectl
+  ## google pubsub subscription
+  sub: pubsub2kubectl
+
+## container args passed as a template so one can use values in here
+## exposed for convenience to enable different log level / format / attr prefix
+## note that it is literate yaml using the pipe operator after the key |
+args: |
+  - -project
+  - {{ .Values.opts.project }}
+  - -topic
+  - {{ .Values.opts.topic }}
+  - -subscription
+  - {{ .Values.opts.sub }}
+#  - -log-level
+#  - debug
+#  - -log-format
+#  - json
+#  - -api-version
+#  - pubsub2kubectl.v1alpha1
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+## The app requires a service account, whether auto-created
+## or not in order to receive its RBAC rules. The app needs to be allowed
+## to create, read and delete the resources it will be managing via pubsub messages
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# It is vital to provide enough memory for kubectl to work inside the container
+# from testing, 128Mi seem to be the minimum
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 128Mi
+
+## The volumes, volumeMounts and env work together to
+## bring the google cloud service account for accessing pubsub to the container
+## this can/will go away once we switch to kubernetes service accounts
+## that are mapped to gcp IAM roles/svc accounts.
+gcpSecretName: pubsub2kubectl-gcp-service-account
+volumes: |
+  - name: google-application-credentials
+    secret:
+      secretName: {{ .Values.gcpSecretName }}
+
+volumeMounts:
+  - mountPath: /opt/secrets
+    name: google-application-credentials
+
+env:
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: /opt/secrets/key.json
+
+## Define the role rules which are bound to the service account
+## this is the literate body of the kubernetes role resource 'rules' key
+## the default allows only pods, please adjust according to your needs
+## and keep the permissions as narrow as possible
+roleRules:
+  - apiGroups:
+      - "*"
+    resources:
+      - "pods"
+    verbs:
+      - "*"
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+{% endraw %}
