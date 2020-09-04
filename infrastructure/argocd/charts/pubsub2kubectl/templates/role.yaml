@@ -1,7 +1,0 @@
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: {{ include "pubsub2kubectl.fullname" . }}
-rules:
-  {{- toYaml .Values.roleRules | nindent 2 }}

@@ -1,4 +1,0 @@
-containers:
-  env:
-  - name: ENV_NAME
-    value: "ENV_VALUE"
