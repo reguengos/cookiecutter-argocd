@@ -28,9 +28,6 @@ cidocker:: ## build the latest ci image for testing
 
 ##@ Argo CD
 
-charts/argo-cd:
-	helm pull argo/argo-cd --untar --untardir ./charts
-
 argo-cd:: charts/argo-cd ## Render argocd chart
 	echo "argo-cd:" && render-chart argocd/workloads/argo-cd.yaml
 argocd:: argo-cd # alias
@@ -70,7 +67,7 @@ pubsub2kubectl:: charts/pubsub2kubectl ## Render all pubsub2kubectl deployments
 ##@ GitHub Bots on Cloud Run
 
 bots:: ## Deploy all bots
-	make -C github bots
+	make -C github-bots bots
 
 ##@ Misc
 
@@ -82,11 +79,6 @@ render:: ## render all manifests
 
 help:: ## Display this help
 	awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[\/%.a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
-
-
-#EMAIL=$(shell ls ~/.config/gcloud/legacy_credentials |grep trivago)
-#GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/legacy_credentials/$(EMAIL)/adc.json
-TF_VAR_ENV=$(dash-2)
 
 build-%::## build docker image localy and tag with latest. make build-producer or other component from the code folder
 	@docker build -t gcr.io/{{cookiecutter.gcp_project}}-stage/$(dash-1):latest -f ../code/$(dash-1)/Dockerfile ../code/ && docker push gcr.io/{{cookiecutter.gcp_project}}-stage/$(dash-1):latest
@@ -102,8 +94,8 @@ images::
 plan-infra-%::## make plan-infra-{{cookiecutter.name}}-data-stage or make plan-infra-{{cookiecutter.name}}-stage
 			@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/$(dash-1)/$(dash-2) gcr.io/{{cookiecutter.gcp_project}}-edge/terraform:0.12.26 terraform plan -refresh=true .
 
-deploy-infra-%::## make deploy-infra-{{cookiecutter.name}}-data-stage or make deploy-infra-{{cookiecutter.name}}-stage *skips approval to deploy directly
-			@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/$(dash-1)/$(dash-2) gcr.io/{{cookiecutter.gcp_project}}-edge/terraform:0.12.26 terraform deploy -auto-approve -refresh=true .
+apply-infra-%::## make deploy-infra-{{cookiecutter.name}}-data-stage or make deploy-infra-{{cookiecutter.name}}-stage *skips approval to deploy directly
+			@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/$(dash-1)/$(dash-2) gcr.io/{{cookiecutter.gcp_project}}-edge/terraform:0.12.26 terraform apply -auto-approve -refresh=true .
 
 ##@ Deploy Locally
 

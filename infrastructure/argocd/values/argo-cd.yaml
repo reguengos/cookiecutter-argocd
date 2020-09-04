@@ -6,8 +6,8 @@
 ## ArgoCD configuration
 ## Ref: https://github.com/argoproj/argo-cd
 ##
-nameOverride: "src-conceptscore"
-fullnameOverride: "src-conceptscore"
+nameOverride: "{{cookiecutter.k8s_namespace}}"
+fullnameOverride: "{{cookiecutter.k8s_namespace}}"
 
 # Optional CRD installation for those without Helm hooks
 installCRDs: false
@@ -465,7 +465,7 @@ server:
   ## reference https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
   config:
     # Argo CD's externally facing base URL (optional). Required when configuring SSO
-    url: https://argocd.example.com
+    url: http://{{cookiecutter.name}}.stage.europe-west4.{{cookiecutter.cluster}}.trv.cloud
     # Argo CD instance label key
     application.instanceLabelKey: argocd.argoproj.io/{{cookiecutter.k8s_namespace}}
     repositories: |

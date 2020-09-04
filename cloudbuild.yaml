@@ -1,44 +1,4 @@
-#
-# Runs for every branch and every commit.
-#
-# Process:
-#   - restore cache
-#   - gradlew
-#     - run tests
-#     - run jib
-#   - submit cache
-#   - render kubernetes manifests
-#   - push manifests to bookinglink-manifests repo
-#   - end.
-#
-# Cache:
-#   - https://github.com/GoogleCloudPlatform/cloud-builders-community/blob/master/README.md#how-to-use-a-community-contributed-build-step
-#   - https://github.com/GoogleCloudPlatform/cloud-builders-community/blob/master/cache/README.md
-#   - set env GRADLE_USER_HOME=/workspace/.gradle to allow gradlew to find the wrapper in the cache
-#
-# Run Locally:
-#   cloud-build-local --config=cloudbuild.yaml --substitutions SHORT_SHA=$(git rev-parse --short HEAD) --dryrun=false .
-#
-# Submit cloud build:
-#   gcloud --project=trv-hs-bookinglink-stage builds submit --config=cloudbuild.yaml --substitutions SHORT_SHA=$(git rev-parse --short HEAD) .
-#
-# Caching Impact:
-#   cold    4 min 43 sec
-#   cached  2 min 29 sec
----
-
-# Todo: create a container with pipenv and python3 installed for running tests
-#
 steps:
-#  - name: eu.gcr.io/${PROJECT_ID}/ci-image:901cd9d
-#    id: tests
-#    waitFor:
-#      - '-'
-#    args:
-#      - echo
-#      - tests
-#    entrypoint: bash
-#
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: build_consumer
     waitFor:
@@ -58,7 +18,6 @@ steps:
       - services
     env:
       - 'BRANCH_NAME=$BRANCH_NAME'
-      
 
   - name: gcr.io/${PROJECT_ID}/cloudbuilder:v3
     id: digest_manifests
