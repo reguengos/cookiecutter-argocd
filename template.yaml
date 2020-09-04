@@ -1,13 +1,13 @@
 apiVersion: backstage.io/v1alpha1
-kind: template
+kind: Template
 metadata:
   name: argocd-pipeline
   title: ArgoCD Pipeline
   description:
     Build And Deliver Software on Kubernetes Using Gitops
   tags:
-    - recommended
-    - argocd
+    - Recommended
+    - ArgoCD
 spec:
   owner: hendrik.maus@trivago.com
   templater: cookiecutter
@@ -15,7 +15,7 @@ spec:
   path: '.'
   schema:
     required:
-      - name
+      - component_id
       - description
       - gcp_project
       - gcp_region
@@ -23,7 +23,7 @@ spec:
       - k8s_cluster_project
       - k8s_namespace
     properties:
-      name:
+      component_id:
         title: Name of your application
         type: string
         description: Unique name of the component
