@@ -11,7 +11,7 @@ metadata:
 spec:
   owner: hendrik.maus@trivago.com
   templater: cookiecutter
-  type: kubernetes deployment
+  type: ci/cd
   path: '.'
   schema:
     required:
@@ -23,7 +23,7 @@ spec:
       - k8s_cluster_project
       - k8s_namespace
     properties:
-      name:
+      component_id:
         title: Name of your application
         type: string
         description: Unique name of the component

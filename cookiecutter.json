@@ -1,5 +1,5 @@
 {
-  "name": "myproject",
+  "component_id": "myproject",
   "project_short_description": "A project.",
   "gcp_project": "trv-pillar-domain-name",
   "gcp_region": "europe-west4",
