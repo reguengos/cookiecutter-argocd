@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+[[ -v VERBOSE ]] && set -x
+set -eo pipefail
+
+## This is used to install local dependancies for interacting with this repository
+
+
+# prints an info log to stdout
+info() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')][$(basename "$0")][inf]: $*"
+}
+
+# prints a warn log to stdout
+warn() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')][$(basename "$0")][wrn]: $*"
+}
+
+# prints an error to stderr and exits with code 1
+err() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')][$(basename "$0")][err]: $*" >&2
+  exit 1
+}
+
+function _install_dependencies() {
+  [[ ! -x "$(command -v akubectl)" ]] && warn "'kubectl' is either not available or not executable"
+  read -p "Install now? (y/n) " -n 1 -r
+  echo    # (optional) move to a new line
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if [[ $(uname -s) = "Linux" ]]; then
+      curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+
+    fi
+    if [[ $(uname -s) = "Darwin" ]]; then
+      curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/darwin/amd64/kubectl"
+    fi
+    chmod +x ./kubectl
+    sudo mv ./kubectl /usr/local/bin/kubectl
+  fi
+
+  [[ ! -x "$(command -v helm)" ]] && warn "'Helm' is either not available or not executable"
+  read -p "Install now? (y/n) " -n 1 -r
+  echo    # (optional) move to a new line
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    curl -fsSL https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+  fi
+
+  [[ ! -x "$(command -v gcloud)" ]] && warn "'gcloud sdk' is either not available or not executable"
+  read -p "Install now? (y/n) " -n 1 -r
+  echo    # (optional) move to a new line
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    curl https://sdk.cloud.google.com | bash
+    exec -l $SHELL
+    gcloud init
+  fi
+}
+
+function _check_dependencies() {
+  [[ ! -x "$(command -v kubectl)" ]] && err "'kubectl' is either not available or not executable"
+  [[ ! -x "$(command -v helm)" ]] && err "'helm' is either not available or not executable"
+  [[ ! -x "$(command -v gcloud)" ]] && err "'gcloud' is either not available or not executable"
+  return true
+}
+
+function main() {
+  _install_dependencies
+  _check_dependencies
+  echo "All dependices sucessfully installed"
+}
+
+main 
