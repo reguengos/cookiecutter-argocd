@@ -4,12 +4,40 @@ include .bootstrap.mk
 ##@ Setup
 
 HELM_VERSION=$(shell helm version --client | sed -En 's/.*Version\:"v([0-9]+)\.([0-9]+)\.([0-9]+)".*/\1/p')
-
+TERRAFORM_VERSION="0.12.26"
 ENVIRONMENT="stage"
+GCP_PROJECT_STRIPPED=$(shell echo {{cookiecutter.gcp_project}} | sed 's/\(-edge\|-stage\|-prod\)//')
 
-ifeq "$(BRANCH_NAME)" "master"
+ifeq "$(BRANCH_NAME)" "main"
 	ENVIRONMENT="prod"
 endif
+
+install-deps:: ## Install local dependancies 
+	echo "Installing dependancies..."
+	install-local-deps
+
+bootstrap:: ## Bring up production environment
+	echo "switching context to ${ENVIRONMENT} env"
+	gcloud container clusters get-credentials tools-${ENVIRONMENT}0-eu-w4 --region europe-west4 --project ${GCP_PROJECT_STRIPPED}-${ENVIRONMENT}
+	echo "switching context to ${GCP_PROJECT_STRIPPED}-${ENVIRONMENT} namespace"
+	kubectl config set-context --current --namespace=${GCP_PROJECT_STRIPPED}-${ENVIRONMENT}
+	echo "Deploying Secrets"
+	echo "Terraform plan/apply"
+	## $(MAKE) k8s-secrets plan-infra-data-prod plan-infra-conceptstream-prod apply-infra-data-prod apply-infra-conceptstream-prod
+	$(MAKE) k8s-secrets plan-infra-data-prod plan-infra-conceptstream-prod apply-infra-data-prod apply-infra-conceptstream-prod
+	echo "deploying argo-cd"
+	helm template {{cookiecutter.k8s_namespace}} charts/argo-cd --values values/argo-cd-${ENVIRONMENT}-eu-w4.yaml | kubectl apply -f -
+
+bootstrap-kms::
+	gcloud kms keyrings create argocd --location global --project=${GCP_PROJECT_STRIPPED}-${ENVIRONMENT}
+	gcloud kms keys create argocd-key --location global --keyring argocd --purpose encryption --project=${GCP_PROJECT_STRIPPED}-${ENVIRONMENT}
+	gcloud kms keys list --location global --keyring argocd --project=${GCP_PROJECT_STRIPPED}-${ENVIRONMENT}
+	gcloud kms encrypt --location=global --keyring=argocd --key=argocd-key --project=${GCP_PROJECT_STRIPPED}-${ENVIRONMENT} --ciphertext-file=resources/ssh/rc5-argocd.enc --plaintext-file=resources/credentials/rc5-argocd --project=${GCP_PROJECT_STRIPPED}-${ENVIRONMENT}
+
+k8s-secrets::
+	mkdir -p resources/credentials
+	gcloud kms decrypt --location=global --keyring=argocd --key=argocd-key --ciphertext-file=resources/ssh/rc5-argocd.enc --plaintext-file=resources/credentials/rc5-argocd --project=${GCP_PROJECT_STRIPPED}-${ENVIRONMENT}
+	kubectl create secret generic argocd-manifests-key --from-file=ssh-privatekey=resources/credentials/rc5-argocd --from-file=ssh-publickey=resources/ssh/rc5-argocd.pub -n {{cookiecutter.k8s_namespace}}
 
 check-tools:: ## Check tools
 ifneq "$(HELM_VERSION)" "3"
@@ -24,7 +52,7 @@ endif
 ##@ Infrastructure
 
 cidocker:: ## build the latest ci image for testing
-	@gcloud builds submit --tag gcr.io/{{cookiecutter.gcp_project}}-stage/ci-image:${VERSION_TAG} ./resources/ci-image/.
+	@gcloud builds submit --tag gcr.io/${GCP_PROJECT_STRIPPED}-stage/ci-image:${VERSION_TAG} ./resources/ci-image/.
 
 ##@ Argo CD
 
@@ -47,7 +75,7 @@ services::
 	$(MAKE) {{cookiecutter.component_id}}
 
 service-%::
-	echo "$*:" && ./resources/make/bin/render-chart "argocd/workloads/service-$(dash-1).yaml" "$(ENVIRONMENT)"
+	echo "$*:" && ./resources/make/bin/render-chart "argocd/workloads/service-$(dash-1).yaml" $(ENVIRONMENT)
 
 digest:: ## Run kbld to replace image tags with digests
 	kbld-digest ./manifests
@@ -81,23 +109,25 @@ help:: ## Display this help
 	awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[\/%.a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 build-%::## build docker image localy and tag with latest. make build-producer or other component from the code folder
-	@docker build -t gcr.io/{{cookiecutter.gcp_project}}-stage/$(dash-1):latest -f ../code/$(dash-1)/Dockerfile ../code/ && docker push gcr.io/{{cookiecutter.gcp_project}}-stage/$(dash-1):latest
+	@docker build -t gcr.io/${GCP_PROJECT_STRIPPED}-${ENVIRONMENT}/$(dash-1):latest -f ../code/$(dash-1)/Dockerfile ../code/ && docker push gcr.io/{{cookiecutter.gcp_project}}-${ENVIRONMENT}/$(dash-1):latest
 
-gcr-%::## build and push to gcr with short hash from git for tag. make gcr-producer-stage
-	@gcloud builds submit --tag gcr.io/{{cookiecutter.gcp_project}}-$(dash-2)/$(dash-1):latest ../code/$(dash-1)/.
+gcr-%::## build and push to gcr with short hash from git for tag. make 
+	@echo gcloud builds submit --tag gcr.io/${GCP_PROJECT_STRIPPED}-${ENVIRONMENT}-$(dash-2)/$(dash-1):latest ../code/$(dash-1)/.
 
 images::
-	$(MAKE) gcr-{{cookiecutter.component_id}}-stage
+	$(MAKE) gcr-{{cookiecutter.component_id}}-${ENVIRONMENT}
 
 ##@ Terraform
+terra-init::## make terra-plan
+	@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/${ENVIRONMENT} gcr.io/{{cookiecutter.gcp_project}}/deployer:v1 terraform init .
 
-plan-infra-%::## make plan-infra-{{cookiecutter.component_id}}-data-stage or make plan-infra-{{cookiecutter.component_id}}-stage
-			@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/$(dash-1)/$(dash-2) gcr.io/{{cookiecutter.gcp_project}}-edge/terraform:0.12.26 terraform plan -refresh=true .
+terra-plan::## make terra-plan
+	@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/${ENVIRONMENT} gcr.io/{{cookiecutter.gcp_project}}/deployer:v1 terraform plan -refresh=true .
 
-apply-infra-%::## make deploy-infra-{{cookiecutter.component_id}}-data-stage or make deploy-infra-{{cookiecutter.component_id}}-stage *skips approval to deploy directly
-			@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/$(dash-1)/$(dash-2) gcr.io/{{cookiecutter.gcp_project}}-edge/terraform:0.12.26 terraform apply -auto-approve -refresh=true .
+terra-apply::## make terra-apply *skips approval to deploy directly
+	@docker run --rm -e GOOGLE_APPLICATION_CREDENTIALS=/workdir/credentials.json -v ~/.config/gcloud:/root/.config/gcloud -v ~/.kube/config:/workdir/kube_config -e KUBE_CONFIG=/workdir/kube_config -v $(GOOGLE_APPLICATION_CREDENTIALS):/workdir/credentials.json -v ${PWD}/terraform:/workdir -w /workdir/deployments/${ENVIRONMENT} gcr.io/{{cookiecutter.gcp_project}}/deployer:v1 terraform apply -auto-approve -refresh=true .
 
 ##@ Deploy Locally
 
-deploy::## deploy to stage environment locally 
-			@gcloud --project={{cookiecutter.gcp_project}}-stage builds submit --config=../cloudbuild.yaml ../
+deploy::## deploy to environment locally 
+			@gcloud --project=${GCP_PROJECT_STRIPPED}-${ENVIRONMENT} builds submit --config=../cloudbuild.yaml ../
