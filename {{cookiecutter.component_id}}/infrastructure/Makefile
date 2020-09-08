@@ -1,8 +1,9 @@
 .DEFAULT_GOAL := help
 include .bootstrap.mk
-{{cookiecutter.gcp_project_stripped}}
-##@ Setup
 
+## All CI/CD infrastructure will be created/deployed to your staging environment as to not duplicated it and create unessicary redundancy. This is why some values are hardcoded to stage.
+
+##@ Setup
 HELM_VERSION=$(shell helm version --client | sed -En 's/.*Version\:"v([0-9]+)\.([0-9]+)\.([0-9]+)".*/\1/p')
 TERRAFORM_VERSION="0.12.26"
 ENVIRONMENT="stage"
@@ -15,11 +16,11 @@ install-deps:: ## Install local dependancies
 	echo "Installing dependancies..."
 	install-local-deps
 
-bootstrap:: ## Bring up production environment
+bootstrap:: ## Deploy Secrets, ArgoCD, and supporting infra
 	echo "switching context to ${ENVIRONMENT} env"
-	gcloud container clusters get-credentials tools-${ENVIRONMENT}0-eu-w4 --region europe-west4 --project {{cookiecutter.gcp_project_stripped}}-${ENVIRONMENT}
-	echo "switching context to {{cookiecutter.gcp_project_stripped}}-${ENVIRONMENT} namespace"
-	kubectl config set-context --current --namespace={{cookiecutter.gcp_project_stripped}}-${ENVIRONMENT}
+	gcloud container clusters get-credentials tools-stage0-eu-w4 --region europe-west4 --project {{cookiecutter.gcp_project_stripped}}-stage
+	echo "switching context to {{cookiecutter.k8s_namespace}} namespace"
+	kubectl config set-context --current --namespace={{cookiecutter.k8s_namespace}}
 	echo "Deploying Secrets"
 	echo "Terraform plan/apply"
 	## $(MAKE) k8s-secrets plan-infra-data-prod plan-infra-conceptstream-prod apply-infra-data-prod apply-infra-conceptstream-prod
@@ -28,14 +29,14 @@ bootstrap:: ## Bring up production environment
 	helm template {{cookiecutter.k8s_namespace}} charts/argo-cd --values values/argo-cd-${ENVIRONMENT}-eu-w4.yaml | kubectl apply -f -
 
 bootstrap-kms::
-	gcloud kms keyrings create argocd --location global --project={{cookiecutter.gcp_project_stripped}}-${ENVIRONMENT}
-	gcloud kms keys create argocd-key --location global --keyring argocd --purpose encryption --project={{cookiecutter.gcp_project_stripped}}-${ENVIRONMENT}
-	gcloud kms keys list --location global --keyring argocd --project={{cookiecutter.gcp_project_stripped}}-${ENVIRONMENT}
-	gcloud kms encrypt --location=global --keyring=argocd --key=argocd-key --project={{cookiecutter.gcp_project_stripped}}-${ENVIRONMENT} --ciphertext-file=resources/ssh/rc5-argocd.enc --plaintext-file=resources/credentials/rc5-argocd --project={{cookiecutter.gcp_project_stripped}}-${ENVIRONMENT}
+	gcloud kms keyrings create argocd --location global --project={{cookiecutter.gcp_project_stripped}}-stage
+	gcloud kms keys create argocd-key --location global --keyring argocd --purpose encryption --project={{cookiecutter.gcp_project_stripped}}-stage
+	gcloud kms keys list --location global --keyring argocd --project={{cookiecutter.gcp_project_stripped}}-stage
+	gcloud kms encrypt --location=global --keyring=argocd --key=argocd-key --project={{cookiecutter.gcp_project_stripped}}-stage --ciphertext-file=resources/ssh/rc5-argocd.enc --plaintext-file=resources/credentials/rc5-argocd --project={{cookiecutter.gcp_project_stripped}}-stage
 
 k8s-secrets::
 	mkdir -p resources/credentials
-	gcloud kms decrypt --location=global --keyring=argocd --key=argocd-key --ciphertext-file=resources/ssh/rc5-argocd.enc --plaintext-file=resources/credentials/rc5-argocd --project={{cookiecutter.gcp_project_stripped}}-${ENVIRONMENT}
+	gcloud kms decrypt --location=global --keyring=argocd --key=argocd-key --ciphertext-file=resources/ssh/rc5-argocd.enc --plaintext-file=resources/credentials/rc5-argocd --project={{cookiecutter.gcp_project_stripped}}-stage
 	kubectl create secret generic argocd-manifests-key --from-file=ssh-privatekey=resources/credentials/rc5-argocd --from-file=ssh-publickey=resources/ssh/rc5-argocd.pub -n {{cookiecutter.k8s_namespace}}
 
 check-tools:: ## Check tools
