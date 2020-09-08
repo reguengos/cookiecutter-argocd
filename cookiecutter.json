@@ -1,7 +1,8 @@
 {
   "component_id": "myproject",
   "project_short_description": "A project.",
-  "gcp_project": "trv-pillar-domain-name",
+  "gcp_project": "trv-pillar-domain-name-edge",
+  "gcp_project_stripped": "{{cookiecutter.gcp_project|replace ('-prod', '')|replace ('-stage', '')|replace ('-edge', '')}}",
   "gcp_region": "europe-west4",
   "k8s_cluster_name": "datproc-shared-stage-eu-w4",
   "k8s_cluster_domain": "datproc-shared-stage-eu-w4",

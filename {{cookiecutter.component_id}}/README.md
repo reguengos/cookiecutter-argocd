@@ -9,7 +9,7 @@ The following command will configure your local kubectl to be able to speak with
 
 ## Secrets
 
-[KMS](https://cloud.google.com/sdk/gcloud/reference/kms)Secrets are encrypted using google KMS, you can decrypt any secret by having access to the google project `{{cookiecutter.gcp_project}}-{edge,stage,prod}` for the according secrets.
+[KMS](https://cloud.google.com/sdk/gcloud/reference/kms)Secrets are encrypted using google KMS, you can decrypt any secret by having access to the google project `{{cookiecutter.gcp_project_stripped}}-{edge,stage,prod}` for the according secrets.
 
 ### Example
 To produce the origional secret for our deployments the following commands were used.
@@ -21,17 +21,17 @@ gcloud kms keys create argocd-key --location global --keyring argocd --purpose e
 
 gcloud kms keys list --location global --keyring argocd
 
-gcloud kms encrypt --location=global --keyring=argocd --key=argocd-key --project={{cookiecutter.gcp_project}}-stage --ciphertext-file=infrastructure/resources/ssh/argocd.enc --plaintext-file=infrastructure/resources/credentials/argocd
+gcloud kms encrypt --location=global --keyring=argocd --key=argocd-key --project={{cookiecutter.gcp_project_stripped}}-stage --ciphertext-file=infrastructure/resources/ssh/argocd.enc --plaintext-file=infrastructure/resources/credentials/argocd
 
 ```
 To recreate the origional unencrypted file for the ssh private key you could use the following to store it locally in the credentials folder which is also found in `.gitignore`
 
 ```
-gcloud kms decrypt --location=global --keyring=argocd --key=argocd-key --project={{cookiecutter.gcp_project}}-stage --ciphertext-file=infrastructure/resources/ssh/argocd.enc --plaintext-file=infrastructure/resources/credentials/argocd
+gcloud kms decrypt --location=global --keyring=argocd --key=argocd-key --project={{cookiecutter.gcp_project_stripped}}-stage --ciphertext-file=infrastructure/resources/ssh/argocd.enc --plaintext-file=infrastructure/resources/credentials/argocd
 ```
 
 When using the gcloud make sure your project is set correctly. For example when trying to access stage use:
-`gcloud config set project {{cookiecutter.gcp_project}}-stage`
+`gcloud config set project {{cookiecutter.gcp_project_stripped}}-stage`
 
 ## Folder Structure ./infrastructure/
 

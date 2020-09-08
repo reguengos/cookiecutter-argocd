@@ -17,7 +17,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: app
-              image: eu.gcr.io/{{cookiecutter.gcp_project}}-stage/producer:latest
+              image: eu.gcr.io/{{cookiecutter.gcp_project_stripped}}-stage/producer:latest
               imagePullPolicy: Always
               env:
 {% raw %}                

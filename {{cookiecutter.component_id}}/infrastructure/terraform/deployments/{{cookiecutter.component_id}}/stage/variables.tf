@@ -1,6 +1,6 @@
 variable "project" {
   description = "The id of the gcp project"
-  default     = "{{cookiecutter.gcp_project}}-stage"
+  default     = "{{cookiecutter.gcp_project_stripped}}-stage"
 }
 
 variable "region" {
