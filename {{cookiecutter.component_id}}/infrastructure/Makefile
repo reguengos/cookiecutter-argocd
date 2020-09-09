@@ -18,13 +18,14 @@ install-deps:: ## Install local dependancies
 
 bootstrap:: ## Deploy Secrets, ArgoCD, and supporting infra
 	echo "switching context to ${ENVIRONMENT} env"
-	gcloud container clusters get-credentials tools-stage0-eu-w4 --region europe-west4 --project {{cookiecutter.gcp_project_stripped}}-stage
+	gcloud container clusters get-credentials tools-stage0-eu-w4 --region europe-west4 --project {{cookiecutter.k8s_project}}
 	echo "switching context to {{cookiecutter.k8s_namespace}} namespace"
 	kubectl config set-context --current --namespace={{cookiecutter.k8s_namespace}}
 	echo "Deploying Secrets"
-	echo "Terraform plan/apply"
+	$(MAKE) k8s-secrets 
+	echo "Terraform init & apply"
 	## $(MAKE) k8s-secrets plan-infra-data-prod plan-infra-conceptstream-prod apply-infra-data-prod apply-infra-conceptstream-prod
-	$(MAKE) k8s-secrets plan-infra-data-prod plan-infra-conceptstream-prod apply-infra-data-prod apply-infra-conceptstream-prod
+	$(MAKE) terra-init terra-apply 
 	echo "deploying argo-cd"
 	helm template {{cookiecutter.k8s_namespace}} charts/argo-cd --values values/argo-cd-${ENVIRONMENT}-eu-w4.yaml | kubectl apply -f -
 
@@ -130,4 +131,4 @@ terra-apply::## make terra-apply *skips approval to deploy directly
 ##@ Deploy Locally
 
 deploy::## deploy to environment locally 
-			@gcloud --project={{cookiecutter.gcp_project_stripped}}-${ENVIRONMENT} builds submit --config=../cloudbuild.yaml ../
+			@gcloud --project={{cookiecutter.gcp_project_stripped}}-stage builds submit --config=../cloudbuild.yaml ../

@@ -37,7 +37,7 @@ data "google_project" "k8s_project_prod" {
 }
 
 module "{{cookiecutter.component_id}}-service-account" {
-  source = "../../../modules/service-account"
+  source = "../../modules/service-account"
 
   name        = "{{cookiecutter.component_id}}-ksa"
   environment = var.environment
