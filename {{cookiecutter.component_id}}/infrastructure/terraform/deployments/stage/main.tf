@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "{{cookiecutter.component_id}}-terraform"
+    bucket = "{{cookiecutter.gcp_project}}-state"
     prefix = "terraform/{{cookiecutter.component_id}}"
   }
 }

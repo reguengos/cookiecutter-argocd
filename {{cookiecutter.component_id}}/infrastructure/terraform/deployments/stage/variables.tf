@@ -18,6 +18,11 @@ variable "k8s_project" {
   default     = "{{cookiecutter.k8s_project}}"
 }
 
+variable "k8s_project_prod" {
+  description = "The id of the gcp project where shared k8s cluster is for prod"
+  default     = "{{cookiecutter.k8s_project_stripped}}-prod"
+}
+
 variable "environment" {
   description = "The name of the environment"
   default     = "stage"

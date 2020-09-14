@@ -1,0 +1,11 @@
+---
+steps:
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        docker build --tag gcr.io/$PROJECT_ID/deployer:v1 \
+          .
+
+        docker push gcr.io/$PROJECT_ID/deployer:v1

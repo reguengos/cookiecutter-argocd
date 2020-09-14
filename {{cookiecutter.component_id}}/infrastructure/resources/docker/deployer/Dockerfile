@@ -1,7 +1,7 @@
 
 FROM gcr.io/google.com/cloudsdktool/cloud-sdk:latest
 
-ENV TERRAFORM_VERSION 0.12.26
+ENV TERRAFORM_VERSION 0.13.2
 ENV CLOUD_SDK_VERSION 237.0.0
 
 # Google cloud SDK
