@@ -10,14 +10,14 @@ spec:
       template:
         metadata:
           labels:
-            app: concept-scores 
+            app: {{cookiecutter.component_id}}
             component: producer
         spec:
-          serviceAccountName: conceptstream-ksa
+          serviceAccountName: {{cookiecutter.component_id}}-ksa
           restartPolicy: OnFailure
           containers:
             - name: app
-              image: eu.gcr.io/{{cookiecutter.gcp_project}}-stage/producer:latest
+              image: eu.gcr.io/{{cookiecutter.gcp_project_stripped}}-stage/producer:latest
               imagePullPolicy: Always
               env:
 {% raw %}                
