@@ -5,8 +5,6 @@ metadata:
   title: ArgoCD Pipeline
   description:
     Build And Deliver Software on Kubernetes Using Gitops
-  tags:
-    - ArgoCD
 spec:
   owner: hendrik.maus@trivago.com
   templater: cookiecutter
