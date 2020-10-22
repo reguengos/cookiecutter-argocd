@@ -6,7 +6,6 @@ metadata:
   description:
     Build And Deliver Software on Kubernetes Using Gitops
   tags:
-    - Recommended
     - ArgoCD
 spec:
   owner: hendrik.maus@trivago.com
