@@ -9,7 +9,7 @@ metadata:
     - Recommended
     - ArgoCD
 spec:
-  owner: hendrik.maus@trivago.com
+  owner: ptsoajoa@carlsberggroup.com
   templater: cookiecutter
   type: kubernetes deployment
   path: '.'
